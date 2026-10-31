@@ -1,6 +1,7 @@
 #include "footerDeco.hpp"
 
 #include <algorithm>
+#include <cctype>
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/view/window/Window.hpp>
@@ -16,6 +17,33 @@ using namespace Render::GL;
 
 static CHyprColor configColor(Config::INTEGER color) {
     return CHyprColor{sc<uint64_t>(color)};
+}
+
+// "org.gnome.Nautilus" -> "NAUTILUS", "firefox" -> "FIREFOX"
+static std::string appName(const std::string& appID) {
+    std::string name = appID;
+    if (const auto dot = name.find_last_of('.'); dot != std::string::npos && dot + 1 < name.size())
+        name = name.substr(dot + 1);
+
+    std::string out;
+    for (unsigned char c : name) {
+        if (std::isspace(c))
+            continue;
+        out += sc<char>(std::toupper(c));
+    }
+    return out.empty() ? "APP" : out;
+}
+
+static std::string footerText(const std::string& appID) {
+    std::string       fmt = g_pGlobalState->config.spiderFooterText->value();
+    const std::string APP = appName(appID);
+
+    size_t            pos = 0;
+    while ((pos = fmt.find("{app}", pos)) != std::string::npos) {
+        fmt.replace(pos, 5, APP);
+        pos += APP.size();
+    }
+    return fmt;
 }
 
 static int footerHeight() {
@@ -73,6 +101,8 @@ void CSpiderFooter::updateWindow(PHLWINDOW) {
 }
 
 void CSpiderFooter::onConfigReloaded() {
+    m_pTextTex = nullptr;
+    m_szTextKey.clear();
     g_pDecorationPositioner->repositionDeco(this);
     damageEntire();
 }
@@ -143,17 +173,39 @@ void CSpiderFooter::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor,
 
     g_pHyprOpenGL->scissor(ctx, nullptr);
 
-    if (R < 1) {
+    if (R < 1)
         g_pHyprOpenGL->renderRect(ctx, box, color, CHyprOpenGLImpl::SRectRenderData{});
-        return;
+    else {
+        // rounded rect, then square off the top half so only the bottom corners stay rounded
+        g_pHyprOpenGL->renderRect(ctx, box, color, CHyprOpenGLImpl::SRectRenderData{.round = R, .roundingPower = PWINDOW->presentation().roundingPower()});
+        CBox top = {box.x, box.y, box.w, box.h - R};
+        top.round();
+        if (top.h > 0)
+            g_pHyprOpenGL->renderRect(ctx, top, color, CHyprOpenGLImpl::SRectRenderData{});
     }
 
-    // rounded rect, then square off the top half so only the bottom corners stay rounded
-    g_pHyprOpenGL->renderRect(ctx, box, color, CHyprOpenGLImpl::SRectRenderData{.round = R, .roundingPower = PWINDOW->presentation().roundingPower()});
-    CBox top = {box.x, box.y, box.w, box.h - R};
-    top.round();
-    if (top.h > 0)
-        g_pHyprOpenGL->renderRect(ctx, top, color, CHyprOpenGLImpl::SRectRenderData{});
+    // ---------- text ----------
+    if (g_pGlobalState->config.spiderFooterText->value().empty())
+        return;
+
+    const std::string TEXT     = footerText(PWINDOW->metadata().initialAppID());
+    const int         SIZE     = sc<int>(std::round(g_pGlobalState->config.spiderFooterTextSize->value() * pMonitor->m_scale));
+    const auto        TEXTCOL  = g_pGlobalState->config.spiderFooterTextColor->value();
+    const int         PAD      = sc<int>(std::round(g_pGlobalState->config.barPadding->value() * pMonitor->m_scale));
+    const int         MAXWIDTH = std::max(1, sc<int>(box.w) - PAD * 2);
+    const std::string KEY      = TEXT + "|" + std::to_string(SIZE) + "|" + std::to_string(TEXTCOL) + "|" + std::to_string(MAXWIDTH);
+
+    if (!m_pTextTex || m_pTextTex->m_texID == 0 || m_szTextKey != KEY) {
+        m_pTextTex  = g_pHyprRenderer->renderText(TEXT, configColor(TEXTCOL), SIZE, false, g_pGlobalState->config.barTextFont->value(), MAXWIDTH);
+        m_szTextKey = KEY;
+    }
+
+    if (!m_pTextTex || m_pTextTex->m_texID == 0)
+        return;
+
+    CBox textBox = {box.x + PAD, box.y + (box.h - m_pTextTex->m_size.y) / 2.0, m_pTextTex->m_size.x, m_pTextTex->m_size.y};
+    textBox.round();
+    g_pHyprOpenGL->renderTexture(ctx, m_pTextTex, textBox, {.a = a});
 }
 
 std::vector<UP<IPassElement>> CSpiderFooterPassElement::draw(Render::CRenderContext& ctx) {

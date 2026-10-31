@@ -31,6 +31,8 @@ class CSpiderFooter : public IHyprWindowDecoration {
     PHLWINDOWREF m_pWindow;
     CBox         m_bAssignedBox;
     int          m_iLastHeight = -1;
+    SP<Render::ITexture> m_pTextTex;
+    std::string          m_szTextKey;
 };
 
 class CSpiderFooterPassElement : public IPassElement {

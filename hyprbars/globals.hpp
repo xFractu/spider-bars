@@ -57,6 +57,9 @@ struct SGlobalState {
         SP<Config::Values::CIntValue>        spiderBarRounding;
         SP<Config::Values::CIntValue>        spiderFooterHeight;
         SP<Config::Values::CColorValue>      spiderFooterColor;
+        SP<Config::Values::CStringValue>     spiderFooterText;
+        SP<Config::Values::CColorValue>      spiderFooterTextColor;
+        SP<Config::Values::CIntValue>        spiderFooterTextSize;
         SP<Config::Values::CIntValue>        spiderOutlineSize;
         SP<Config::Values::CColorValue>      spiderOutlineColor;
     } config;

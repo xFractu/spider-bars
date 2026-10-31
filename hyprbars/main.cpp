@@ -277,6 +277,12 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.spiderFooterColor  = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.footer", "SpiderOS: color of the bar under the window", 0xff154156);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterHeight);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterColor);
+    g_pGlobalState->config.spiderFooterText      = makeShared<Config::Values::CStringValue>("plugin:hyprbars:footer_text", "SpiderOS: text in the bar under the window, {app} = app name", "");
+    g_pGlobalState->config.spiderFooterTextColor = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.footer_text", "SpiderOS: color of the footer text", 0xff81b6c6);
+    g_pGlobalState->config.spiderFooterTextSize  = makeShared<Config::Values::CIntValue>("plugin:hyprbars:footer_text_size", "SpiderOS: size of the footer text", 8);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterText);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterTextColor);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterTextSize);
     g_pGlobalState->config.spiderOutlineSize  = makeShared<Config::Values::CIntValue>("plugin:hyprbars:outline_size", "SpiderOS: border around bar + window + footer, 0 = off", 0);
     g_pGlobalState->config.spiderOutlineColor = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.outline", "SpiderOS: color of the outer border", 0xff0f3652);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutlineSize);
