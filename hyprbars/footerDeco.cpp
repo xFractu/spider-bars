@@ -1,4 +1,5 @@
 #include "footerDeco.hpp"
+#include "spiderUtil.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -169,7 +170,7 @@ void CSpiderFooter::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor,
 
     // rounding of the bottom corners (same as the bar's top corners, see bar_rounding)
     const auto BR = g_pGlobalState->config.spiderBarRounding->value();
-    const int  R  = BR > 0 ? sc<int>(std::min<double>(BR * pMonitor->m_scale, std::min(box.w, box.h) / 2.0)) : 0;
+    const int  R  = (BR > 0 && !spiderIsMaximized(PWINDOW)) ? sc<int>(std::min<double>(BR * pMonitor->m_scale, std::min(box.w, box.h) / 2.0)) : 0;
 
     g_pHyprOpenGL->scissor(ctx, nullptr);
 

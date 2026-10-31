@@ -27,6 +27,7 @@
 
 #include "globals.hpp"
 #include "BarPassElement.hpp"
+#include "spiderUtil.hpp"
 
 #include <climits>
 #include <algorithm>
@@ -576,7 +577,7 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
     const auto scaledRounding = ROUNDING > 0 ? ROUNDING * pMonitor->m_scale - 2 /* idk why but otherwise it looks bad due to the gaps */ : 0;
     // SpiderOS: square top corners on the bar
     const auto BARROUNDOPT = g_pGlobalState->config.spiderBarRounding->value();
-    const auto barRounding = g_pGlobalState->config.spiderSquareTop->value() ? 0 : (BARROUNDOPT >= 0 ? BARROUNDOPT * pMonitor->m_scale : scaledRounding);
+    const auto barRounding = (g_pGlobalState->config.spiderSquareTop->value() || spiderIsMaximized(PWINDOW)) ? 0 : (BARROUNDOPT >= 0 ? BARROUNDOPT * pMonitor->m_scale : scaledRounding);
 
     m_seExtents = {{0, sc<int>(HEIGHT)}, {}};
 

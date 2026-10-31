@@ -1,4 +1,5 @@
 #include "outlineDeco.hpp"
+#include "spiderUtil.hpp"
 
 #include <algorithm>
 
@@ -128,7 +129,7 @@ void CSpiderOutline::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor
         return;
 
     const auto BR    = g_pGlobalState->config.spiderBarRounding->value();
-    const int  ROUND = BR > 0 ? sc<int>(BR * pMonitor->m_scale) : 0;
+    const int  ROUND = (BR > 0 && !spiderIsMaximized(PWINDOW)) ? sc<int>(BR * pMonitor->m_scale) : 0;
 
     g_pHyprOpenGL->scissor(ctx, nullptr);
 
