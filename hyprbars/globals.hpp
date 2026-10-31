@@ -25,11 +25,13 @@ struct SHyprButton {
 
 class CHyprBar;
 class CSpiderFooter;
+class CSpiderOutline;
 
 struct SGlobalState {
     std::vector<SHyprButton>  buttons;
     std::vector<WP<CHyprBar>> bars;
     std::vector<WP<CSpiderFooter>> footers;
+    std::vector<WP<CSpiderOutline>> outlines;
     uint32_t                  nobarRuleIdx      = 0;
     uint32_t                  barColorRuleIdx   = 0;
     uint32_t                  titleColorRuleIdx = 0;
@@ -55,6 +57,8 @@ struct SGlobalState {
         SP<Config::Values::CIntValue>        spiderBarRounding;
         SP<Config::Values::CIntValue>        spiderFooterHeight;
         SP<Config::Values::CColorValue>      spiderFooterColor;
+        SP<Config::Values::CIntValue>        spiderOutlineSize;
+        SP<Config::Values::CColorValue>      spiderOutlineColor;
     } config;
 };
 
