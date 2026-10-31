@@ -236,6 +236,9 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderCloseHoverColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderIconSize);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderIconWeight);
+    g_pGlobalState->config.spiderAppIcons = makeShared<Config::Values::CStringValue>(
+        "plugin:hyprbars:app_icons", "SpiderOS: per-app icons before the title, \"class=icon;class=icon\" (case-insensitive)", "");
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderAppIcons);
 
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);

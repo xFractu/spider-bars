@@ -62,6 +62,8 @@ class CHyprBar : public IHyprWindowDecoration {
     CBox                       m_bAssignedBox;
 
     SP<Render::ITexture>       m_pTextTex;
+    SP<Render::ITexture>       m_pSpiderIconTex;
+    std::string                m_szSpiderIconKey;
 
     bool                       m_bWindowSizeChanged = false;
     bool                       m_hidden             = false;

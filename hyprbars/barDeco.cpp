@@ -29,6 +29,44 @@
 #include "BarPassElement.hpp"
 
 #include <climits>
+#include <algorithm>
+#include <cctype>
+
+// SpiderOS: look up "class=icon;class=icon" (case-insensitive class match)
+static std::string spiderIconFor(const std::string& appID, const std::string& map) {
+    if (appID.empty() || map.empty())
+        return "";
+
+    std::string id = appID;
+    std::transform(id.begin(), id.end(), id.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    size_t pos = 0;
+    while (pos <= map.size()) {
+        size_t      next  = map.find(';', pos);
+        std::string entry = map.substr(pos, next == std::string::npos ? std::string::npos : next - pos);
+        size_t      eq    = entry.find('=');
+        if (eq != std::string::npos) {
+            std::string key = entry.substr(0, eq);
+            std::string val = entry.substr(eq + 1);
+            // trim spaces
+            auto trim = [](std::string& str) {
+                while (!str.empty() && std::isspace((unsigned char)str.front()))
+                    str.erase(str.begin());
+                while (!str.empty() && std::isspace((unsigned char)str.back()))
+                    str.pop_back();
+            };
+            trim(key);
+            trim(val);
+            std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (!key.empty() && key == id)
+                return val;
+        }
+        if (next == std::string::npos)
+            break;
+        pos = next + 1;
+    }
+    return "";
+}
 
 using namespace Render::GL;
 
@@ -682,15 +720,40 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
         CHyprColor   ringCol = configColor(g_pGlobalState->config.spiderIconColor->value());
         ringCol.a *= a;
 
-        CBox outer = {ix, iy, d, d};
-        outer.round();
-        g_pHyprOpenGL->renderRect(ctx, outer, ringCol, CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(std::round(d / 2.0)), .roundingPower = 2.F});
+        // app icon (Nerd Font glyph) if configured, otherwise the ring
+        const std::string GLYPH = spiderIconFor(PWINDOW->metadata().initialAppID(), g_pGlobalState->config.spiderAppIcons->value());
+        bool              drewIcon = false;
 
-        const double inner = d - thick * 2;
-        if (inner > 0) {
-            CBox innerBox = {ix + thick, iy + thick, inner, inner};
-            innerBox.round();
-            g_pHyprOpenGL->renderRect(ctx, innerBox, color, CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(std::round(inner / 2.0)), .roundingPower = 2.F});
+        if (!GLYPH.empty()) {
+            const int         ICONSIZE = sc<int>(std::round(HEIGHT * 0.62 * SCALE));
+            const std::string KEY      = GLYPH + "|" + std::to_string(ICONSIZE) + "|" + std::to_string(ringCol.r) + std::to_string(ringCol.g) + std::to_string(ringCol.b);
+
+            if (!m_pSpiderIconTex || m_pSpiderIconTex->m_texID == 0 || m_szSpiderIconKey != KEY) {
+                CHyprColor texCol = configColor(g_pGlobalState->config.spiderIconColor->value());
+                m_pSpiderIconTex  = g_pHyprRenderer->renderText(GLYPH, texCol, ICONSIZE, false, g_pGlobalState->config.barTextFont->value(), sc<int>(d * 3));
+                m_szSpiderIconKey = KEY;
+            }
+
+            if (m_pSpiderIconTex && m_pSpiderIconTex->m_texID != 0) {
+                CBox pos = {ix + d / 2.0 - m_pSpiderIconTex->m_size.x / 2.0, textBox.y + BARBUF.y / 2.0 - m_pSpiderIconTex->m_size.y / 2.0, m_pSpiderIconTex->m_size.x,
+                            m_pSpiderIconTex->m_size.y};
+                pos.round();
+                g_pHyprOpenGL->renderTexture(ctx, m_pSpiderIconTex, pos, {.a = a});
+                drewIcon = true;
+            }
+        }
+
+        if (!drewIcon) {
+            CBox outer = {ix, iy, d, d};
+            outer.round();
+            g_pHyprOpenGL->renderRect(ctx, outer, ringCol, CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(std::round(d / 2.0)), .roundingPower = 2.F});
+
+            const double inner = d - thick * 2;
+            if (inner > 0) {
+                CBox innerBox = {ix + thick, iy + thick, inner, inner};
+                innerBox.round();
+                g_pHyprOpenGL->renderRect(ctx, innerBox, color, CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(std::round(inner / 2.0)), .roundingPower = 2.F});
+            }
         }
 
         spiderIconSpace = d + std::round(8 * SCALE);
@@ -745,6 +808,8 @@ void CHyprBar::onConfigReloaded() {
     m_bButtonsDirty      = true;
     m_bTitleColorChanged = true;
     m_pTextTex           = nullptr;
+    m_pSpiderIconTex     = nullptr;
+    m_szSpiderIconKey.clear();
 
     g_pDecorationPositioner->repositionDeco(this);
     damageEntire();

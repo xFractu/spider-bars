@@ -48,6 +48,7 @@ struct SGlobalState {
         SP<Config::Values::CColorValue>      spiderHoverColor, spiderCloseHoverColor;
         SP<Config::Values::CIntValue>        spiderIconSize;
         SP<Config::Values::CFontWeightValue> spiderIconWeight;
+        SP<Config::Values::CStringValue>     spiderAppIcons;
     } config;
 };
 
