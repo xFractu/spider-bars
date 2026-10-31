@@ -18,6 +18,7 @@
 #include <algorithm>
 
 #include "barDeco.hpp"
+#include "footerDeco.hpp"
 #include "globals.hpp"
 
 extern "C" {
@@ -40,6 +41,13 @@ static void onNewWindow(PHLWINDOW window) {
         bar->m_self = bar;
         HyprlandAPI::addWindowDecoration(PHANDLE, window, std::move(bar));
     }
+
+    // SpiderOS: bar under the window
+    if (!std::ranges::any_of(window->presentation().decorations(), [](const auto& d) { return d->getDisplayName() == "SpiderFooter"; })) {
+        auto footer = Hyprutils::Memory::makeShared<CSpiderFooter>(window);
+        g_pGlobalState->footers.emplace_back(footer);
+        HyprlandAPI::addWindowDecoration(PHANDLE, window, std::move(footer));
+    }
 }
 
 static void onPreConfigReload() {
@@ -52,6 +60,13 @@ static void onConfigReloaded() {
             continue;
 
         b->onConfigReloaded();
+    }
+
+    for (auto& f : g_pGlobalState->footers) {
+        if (!f)
+            continue;
+
+        f->onConfigReloaded();
     }
 }
 
@@ -243,6 +258,10 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderSquareTop);
     g_pGlobalState->config.spiderBarRounding = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_rounding", "SpiderOS: rounding of the bar's top corners, -1 = follow the window", -1);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderBarRounding);
+    g_pGlobalState->config.spiderFooterHeight = makeShared<Config::Values::CIntValue>("plugin:hyprbars:footer_height", "SpiderOS: height of the bar under the window, 0 = off", 0);
+    g_pGlobalState->config.spiderFooterColor  = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.footer", "SpiderOS: color of the bar under the window", 0xff154156);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterHeight);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterColor);
 
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);
@@ -268,6 +287,7 @@ APICALL EXPORT void PLUGIN_EXIT() {
         m->m_scheduledRecalc = true;
 
     g_pHyprRenderer->context().m_pass.removeAllOfType("CBarPassElement");
+    g_pHyprRenderer->context().m_pass.removeAllOfType("CSpiderFooterPassElement");
 
     Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
     Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
