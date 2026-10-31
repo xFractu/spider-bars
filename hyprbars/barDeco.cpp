@@ -572,52 +572,7 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
         g_pHyprOpenGL->renderRect(ctx, titleBarBox, color,
                                   CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
 
-    // ---------- SpiderOS: accent block + buttons box ----------
     const bool SPIDER = g_pGlobalState->config.spiderStyle->value();
-    if (SPIDER && !g_pGlobalState->buttons.empty()) {
-        const auto SCALE   = pMonitor->m_scale;
-        const auto BPAD    = g_pGlobalState->config.barPadding->value();
-        const auto BBPAD   = g_pGlobalState->config.barButtonPadding->value();
-        const auto VISIBLE = getVisibleButtonCount(BBPAD, BPAD, Vector2D{BARBUF.x, BARBUF.y}, SCALE);
-
-        double     buttonsW = 0;
-        for (size_t i = 0; i < VISIBLE; ++i)
-            buttonsW += g_pGlobalState->buttons[i].size;
-        if (VISIBLE > 1)
-            buttonsW += sc<double>(VISIBLE - 1) * BBPAD;
-
-        const double boxW    = std::round((buttonsW + BPAD * 2) * SCALE);
-        const double accentW = std::round(g_pGlobalState->config.spiderAccentWidth->value() * SCALE);
-        const double barH    = std::round(BARBUF.y);
-
-        CHyprColor   boxCol = configColor(g_pGlobalState->config.spiderBoxColor->value());
-        CHyprColor   accCol = configColor(g_pGlobalState->config.spiderAccentColor->value());
-        boxCol.a *= a;
-        accCol.a *= a;
-
-        if (VISIBLE > 0) {
-            const double boxX    = BUTTONSRIGHT ? titleBarBox.x + titleBarBox.w - boxW : titleBarBox.x;
-            const double accentX = BUTTONSRIGHT ? boxX - accentW : boxX + boxW;
-
-            // accent block (square)
-            if (accentW > 0) {
-                CBox accentBox = {accentX, sc<double>(titleBarBox.y), accentW, barH};
-                accentBox.round();
-                g_pHyprOpenGL->renderRect(ctx, accentBox, accCol, CHyprOpenGLImpl::SRectRenderData{});
-            }
-
-            // buttons box: rounded only on the outer top corner (follows window rounding)
-            CBox roundBox = {boxX, sc<double>(titleBarBox.y), boxW, sc<double>(titleBarBox.h)};
-            roundBox.round();
-            g_pHyprOpenGL->renderRect(ctx, roundBox, boxCol,
-                                      CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
-
-            const double squareW   = std::max(0.0, boxW - std::max(0.0, sc<double>(scaledRounding)) * 2);
-            CBox         squareBox = {BUTTONSRIGHT ? boxX : boxX + boxW - squareW, sc<double>(titleBarBox.y), squareW, barH};
-            squareBox.round();
-            g_pHyprOpenGL->renderRect(ctx, squareBox, boxCol, CHyprOpenGLImpl::SRectRenderData{});
-        }
-    }
 
     // render title
     const int  SCALEDTEXTSIZE = std::round(g_pGlobalState->config.barTextSize->value() * pMonitor->m_scale);
@@ -636,6 +591,64 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
         g_pHyprOpenGL->setCapStatus(GL_STENCIL_TEST, false);
         glStencilMask(-1);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    }
+
+
+    // ---------- SpiderOS: accent block + buttons box (after stencil cleanup) ----------
+    if (SPIDER && !g_pGlobalState->buttons.empty()) {
+        const auto SCALE   = pMonitor->m_scale;
+        const auto BPAD    = g_pGlobalState->config.barPadding->value();
+        const auto BBPAD   = g_pGlobalState->config.barButtonPadding->value();
+        const auto VISIBLE = getVisibleButtonCount(BBPAD, BPAD, Vector2D{BARBUF.x, BARBUF.y}, SCALE);
+
+        double     buttonsW = 0;
+        for (size_t i = 0; i < VISIBLE; ++i)
+            buttonsW += g_pGlobalState->buttons[i].size;
+        if (VISIBLE > 1)
+            buttonsW += sc<double>(VISIBLE - 1) * BBPAD;
+
+        const double boxW    = std::round((buttonsW + BPAD * 2) * SCALE);
+        const double accentW = std::round(g_pGlobalState->config.spiderAccentWidth->value() * SCALE);
+        const double barH    = std::round(BARBUF.y);
+        const double R       = std::clamp(sc<double>(scaledRounding), 0.0, std::min(boxW, barH) / 2.0);
+        const double y0      = sc<double>(titleBarBox.y);
+
+        CHyprColor   boxCol = configColor(g_pGlobalState->config.spiderBoxColor->value());
+        CHyprColor   accCol = configColor(g_pGlobalState->config.spiderAccentColor->value());
+        boxCol.a *= a;
+        accCol.a *= a;
+
+        if (VISIBLE > 0) {
+            const double boxX    = BUTTONSRIGHT ? titleBarBox.x + titleBarBox.w - boxW : titleBarBox.x;
+            const double accentX = BUTTONSRIGHT ? boxX - accentW : boxX + boxW;
+
+            // accent block (square)
+            if (accentW > 0) {
+                CBox accentBox = {accentX, y0, accentW, barH};
+                accentBox.round();
+                g_pHyprOpenGL->renderRect(ctx, accentBox, accCol, CHyprOpenGLImpl::SRectRenderData{});
+            }
+
+            if (R < 1) {
+                CBox full = {boxX, y0, boxW, barH};
+                full.round();
+                g_pHyprOpenGL->renderRect(ctx, full, boxCol, CHyprOpenGLImpl::SRectRenderData{});
+            } else {
+                // 1) rounded rect (all corners)
+                CBox roundBox = {boxX, y0, boxW, barH};
+                roundBox.round();
+                g_pHyprOpenGL->renderRect(ctx, roundBox, boxCol,
+                                          CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(R), .roundingPower = m_pWindow->presentation().roundingPower()});
+                // 2) square inner side (full height) -> only the outer corners stay rounded
+                CBox inner = {BUTTONSRIGHT ? boxX : boxX + R, y0, boxW - R, barH};
+                inner.round();
+                g_pHyprOpenGL->renderRect(ctx, inner, boxCol, CHyprOpenGLImpl::SRectRenderData{});
+                // 3) square bottom outer corner -> only the TOP outer corner stays rounded
+                CBox bottom = {BUTTONSRIGHT ? boxX + boxW - R : boxX, y0 + R, R, barH - R};
+                bottom.round();
+                g_pHyprOpenGL->renderRect(ctx, bottom, boxCol, CHyprOpenGLImpl::SRectRenderData{});
+            }
+        }
     }
 
     CBox textBox = {titleBarBox.x, titleBarBox.y, BARBUF.x, BARBUF.y};
