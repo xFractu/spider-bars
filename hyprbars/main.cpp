@@ -241,6 +241,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderAppIcons);
     g_pGlobalState->config.spiderSquareTop = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_square_top", "SpiderOS: square top corners on the bar", false);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderSquareTop);
+    g_pGlobalState->config.spiderBarRounding = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_rounding", "SpiderOS: rounding of the bar's top corners, -1 = follow the window", -1);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderBarRounding);
 
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);

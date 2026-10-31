@@ -50,6 +50,7 @@ struct SGlobalState {
         SP<Config::Values::CFontWeightValue> spiderIconWeight;
         SP<Config::Values::CStringValue>     spiderAppIcons;
         SP<Config::Values::CBoolValue>       spiderSquareTop;
+        SP<Config::Values::CIntValue>        spiderBarRounding;
     } config;
 };
 

@@ -575,7 +575,8 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
 
     const auto scaledRounding = ROUNDING > 0 ? ROUNDING * pMonitor->m_scale - 2 /* idk why but otherwise it looks bad due to the gaps */ : 0;
     // SpiderOS: square top corners on the bar
-    const auto barRounding = g_pGlobalState->config.spiderSquareTop->value() ? 0 : scaledRounding;
+    const auto BARROUNDOPT = g_pGlobalState->config.spiderBarRounding->value();
+    const auto barRounding = g_pGlobalState->config.spiderSquareTop->value() ? 0 : (BARROUNDOPT >= 0 ? BARROUNDOPT * pMonitor->m_scale : scaledRounding);
 
     m_seExtents = {{0, sc<int>(HEIGHT)}, {}};
 
@@ -584,7 +585,7 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
     const auto BARBUF = DECOBOX.size() * pMonitor->m_scale;
 
     CBox       titleBarBox = {DECOBOX.x - pMonitor->m_position.x, DECOBOX.y - pMonitor->m_position.y, DECOBOX.w,
-                              DECOBOX.h + ROUNDING * 3 /* to fill the bottom cuz we can't disable rounding there */};
+                              DECOBOX.h + std::max<double>(ROUNDING, BARROUNDOPT) * 3 /* to fill the bottom cuz we can't disable rounding there */};
 
     titleBarBox.translate(PWINDOW->presentation().floatingOffset()).scale(pMonitor->m_scale).round();
 
