@@ -120,7 +120,15 @@ void CSpiderFooter::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor,
         return;
 
     const auto DECOBOX = assignedBoxGlobal();
-    CBox       box     = {DECOBOX.x - pMonitor->m_position.x, DECOBOX.y - pMonitor->m_position.y, DECOBOX.w, DECOBOX.h};
+
+    // place the footer right under the window (+ its border), using the real window geometry
+    const auto PWORKSPACE      = PWINDOW->m_workspace;
+    const auto WORKSPACEOFFSET = PWORKSPACE && !(PWINDOW->m_state & Desktop::View::WINDOW_STATE_PINNED) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
+    const auto WINPOS          = PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT);
+    const auto WINSIZE         = PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT);
+    const auto BORDER          = PWINDOW->presentation().borderSize();
+
+    CBox       box = {DECOBOX.x - pMonitor->m_position.x, WINPOS.y + WINSIZE.y + BORDER + WORKSPACEOFFSET.y - pMonitor->m_position.y, DECOBOX.w, sc<double>(H)};
     box.translate(PWINDOW->presentation().floatingOffset()).scale(pMonitor->m_scale).round();
 
     if (box.w < 1 || box.h < 1)
