@@ -7,6 +7,8 @@
 #include <hyprland/src/desktop/view/window/WindowPresentation.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
+#include <hyprland/src/layout/LayoutManager.hpp>
+#include <hyprland/src/layout/target/Target.hpp>
 #include <hyprutils/memory/Casts.hpp>
 
 using namespace Hyprutils::Memory;
@@ -38,7 +40,7 @@ SDecorationPositioningInfo CSpiderFooter::getPositioningInfo() {
     info.edges          = DECORATION_EDGE_BOTTOM;
     info.priority       = 5000;
     info.reserved       = true;
-    info.desiredExtents = {{0, 0}, {0, sc<double>(H)}};
+    info.desiredExtents = {Vector2D{0.0, 0.0}, Vector2D{0.0, sc<double>(H)}};
     return info;
 }
 
