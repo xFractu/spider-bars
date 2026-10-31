@@ -228,6 +228,14 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderAccentColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderIconColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderAccentWidth);
+    g_pGlobalState->config.spiderHoverColor      = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.button_hover", "SpiderOS: background of a hovered button", 0xff3b849f);
+    g_pGlobalState->config.spiderCloseHoverColor = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.close_hover", "SpiderOS: background of the hovered close (first) button, 0 = same as col.button_hover", 0);
+    g_pGlobalState->config.spiderIconSize        = makeShared<Config::Values::CIntValue>("plugin:hyprbars:button_icon_size", "SpiderOS: icon size in % of the button size", 85);
+    g_pGlobalState->config.spiderIconWeight      = makeShared<Config::Values::CFontWeightValue>("plugin:hyprbars:button_icon_weight", "SpiderOS: icon font weight", 800);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderHoverColor);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderCloseHoverColor);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderIconSize);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderIconWeight);
 
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);

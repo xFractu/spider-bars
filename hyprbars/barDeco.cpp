@@ -432,8 +432,13 @@ void CHyprBar::renderBarButtonsText(Render::CRenderContext& ctx, CBox* barBox, c
             // render icon
             auto fgcol = button.userfg ? button.fgcol : (button.bgcol.r + button.bgcol.g + button.bgcol.b < 1) ? CHyprColor(0xFFFFFFFF) : CHyprColor(0xFF000000);
 
-            button.iconTex =
-                g_pHyprRenderer->renderText(button.icon, fgcol, std::round(button.size * 0.62 * scale), false, g_pGlobalState->config.barTextFont->value(), scaledButtonSize);
+            if (g_pGlobalState->config.spiderStyle->value()) {
+                const float factor = std::clamp(sc<float>(g_pGlobalState->config.spiderIconSize->value()) / 100.F, 0.1F, 2.F);
+                button.iconTex     = g_pHyprRenderer->renderText(button.icon, fgcol, std::round(button.size * factor * scale), false, g_pGlobalState->config.barTextFont->value(),
+                                                                 scaledButtonSize * 2, g_pGlobalState->config.spiderIconWeight->value().m_value);
+            } else
+                button.iconTex =
+                    g_pHyprRenderer->renderText(button.icon, fgcol, std::round(button.size * 0.62 * scale), false, g_pGlobalState->config.barTextFont->value(), scaledButtonSize);
             button.m_fIconScale = scale;
         }
 
@@ -444,6 +449,18 @@ void CHyprBar::renderBarButtonsText(Render::CRenderContext& ctx, CBox* barBox, c
         const auto iconY = barBox->y + barBox->height / 2.0 - button.iconTex->m_size.y / 2.0;
         CBox       pos   = {iconX, iconY, button.iconTex->m_size.x, button.iconTex->m_size.y};
         pos.round(); // snap to whole pixels, otherwise the icon is sampled at a half-pixel offset and blurs
+
+        // SpiderOS: hover highlight behind the icon
+        if (g_pGlobalState->config.spiderStyle->value() && hovering) {
+            const double cellW = std::round((button.size + BARBUTTONPADDING) * scale);
+            const double cx    = barBox->x + (BUTTONSRIGHT ? barBox->width - offset - scaledButtonSize / 2.0 : offset + scaledButtonSize / 2.0);
+            CBox         hb    = {cx - cellW / 2.0, barBox->y, cellW, barBox->height};
+            hb.round();
+            const auto CLOSEHOVER = g_pGlobalState->config.spiderCloseHoverColor->value();
+            CHyprColor hc         = configColor((i == 0 && CLOSEHOVER > 0) ? CLOSEHOVER : g_pGlobalState->config.spiderHoverColor->value());
+            hc.a *= a;
+            g_pHyprOpenGL->renderRect(ctx, hb, hc, CHyprOpenGLImpl::SRectRenderData{});
+        }
 
         if (!ICONONHOVER || (ICONONHOVER && m_iButtonHoverState > 0))
             g_pHyprOpenGL->renderTexture(ctx, button.iconTex, pos, {.a = a});

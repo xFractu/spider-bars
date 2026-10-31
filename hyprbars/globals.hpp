@@ -45,6 +45,9 @@ struct SGlobalState {
         SP<Config::Values::CBoolValue>       spiderStyle;
         SP<Config::Values::CColorValue>      spiderBoxColor, spiderAccentColor, spiderIconColor;
         SP<Config::Values::CIntValue>        spiderAccentWidth;
+        SP<Config::Values::CColorValue>      spiderHoverColor, spiderCloseHoverColor;
+        SP<Config::Values::CIntValue>        spiderIconSize;
+        SP<Config::Values::CFontWeightValue> spiderIconWeight;
     } config;
 };
 
