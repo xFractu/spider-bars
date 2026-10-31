@@ -574,6 +574,8 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
     const auto ROUNDING = PWINDOW->presentation().rounding() + (PRECEDENCE ? 0 : PWINDOW->presentation().borderSize());
 
     const auto scaledRounding = ROUNDING > 0 ? ROUNDING * pMonitor->m_scale - 2 /* idk why but otherwise it looks bad due to the gaps */ : 0;
+    // SpiderOS: square top corners on the bar
+    const auto barRounding = g_pGlobalState->config.spiderSquareTop->value() ? 0 : scaledRounding;
 
     m_seExtents = {{0, sc<int>(HEIGHT)}, {}};
 
@@ -622,10 +624,10 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
     if (SHOULDBLUR)
         g_pHyprOpenGL->renderRect(
             ctx, titleBarBox, color,
-            CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower(), .blur = true, .blurA = a});
+            CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(barRounding), .roundingPower = m_pWindow->presentation().roundingPower(), .blur = true, .blurA = a});
     else
         g_pHyprOpenGL->renderRect(ctx, titleBarBox, color,
-                                  CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
+                                  CHyprOpenGLImpl::SRectRenderData{.round = sc<int>(barRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
 
     const bool SPIDER = g_pGlobalState->config.spiderStyle->value();
 
@@ -665,7 +667,7 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
         const double boxW    = std::round((buttonsW + BPAD * 2) * SCALE);
         const double accentW = std::round(g_pGlobalState->config.spiderAccentWidth->value() * SCALE);
         const double barH    = std::round(BARBUF.y);
-        const double R       = std::clamp(sc<double>(scaledRounding), 0.0, std::min(boxW, barH) / 2.0);
+        const double R       = std::clamp(sc<double>(barRounding), 0.0, std::min(boxW, barH) / 2.0);
         const double y0      = sc<double>(titleBarBox.y);
 
         CHyprColor   boxCol = configColor(g_pGlobalState->config.spiderBoxColor->value());
