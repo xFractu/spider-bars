@@ -283,6 +283,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterText);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterTextColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterTextSize);
+    g_pGlobalState->config.spiderFooterTextWeight = makeShared<Config::Values::CFontWeightValue>("plugin:hyprbars:footer_text_weight", "SpiderOS: weight of the footer text", 400);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderFooterTextWeight);
     g_pGlobalState->config.spiderOutlineSize  = makeShared<Config::Values::CIntValue>("plugin:hyprbars:outline_size", "SpiderOS: border around bar + window + footer, 0 = off", 0);
     g_pGlobalState->config.spiderOutlineColor = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.outline", "SpiderOS: color of the outer border", 0xff0f3652);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutlineSize);

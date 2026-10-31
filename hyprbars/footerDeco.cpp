@@ -193,10 +193,11 @@ void CSpiderFooter::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor,
     const auto        TEXTCOL  = g_pGlobalState->config.spiderFooterTextColor->value();
     const int         PAD      = sc<int>(std::round(g_pGlobalState->config.barPadding->value() * pMonitor->m_scale));
     const int         MAXWIDTH = std::max(1, sc<int>(box.w) - PAD * 2);
-    const std::string KEY      = TEXT + "|" + std::to_string(SIZE) + "|" + std::to_string(TEXTCOL) + "|" + std::to_string(MAXWIDTH);
+    const auto        WEIGHT   = g_pGlobalState->config.spiderFooterTextWeight->value().m_value;
+    const std::string KEY      = TEXT + "|" + std::to_string(SIZE) + "|" + std::to_string(TEXTCOL) + "|" + std::to_string(MAXWIDTH) + "|" + std::to_string(WEIGHT);
 
     if (!m_pTextTex || m_pTextTex->m_texID == 0 || m_szTextKey != KEY) {
-        m_pTextTex  = g_pHyprRenderer->renderText(TEXT, configColor(TEXTCOL), SIZE, false, g_pGlobalState->config.barTextFont->value(), MAXWIDTH);
+        m_pTextTex  = g_pHyprRenderer->renderText(TEXT, configColor(TEXTCOL), SIZE, false, g_pGlobalState->config.barTextFont->value(), MAXWIDTH, WEIGHT);
         m_szTextKey = KEY;
     }
 
