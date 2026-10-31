@@ -1,0 +1,11 @@
+[repository]
+name = "spider-bars"
+authors = ["xFractu", "Vaxry"]
+
+[hyprbars]
+description = "hyprbars con el estilo de SpiderOS (bloques planos)"
+authors = ["Vaxry", "xFractu"]
+output = "hyprbars/hyprbars.so"
+build = [
+    "make -C hyprbars all",
+]
