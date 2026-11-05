@@ -289,6 +289,10 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.spiderOutlineColor = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.outline", "SpiderOS: color of the outer border", 0xff0f3652);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutlineSize);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutlineColor);
+    g_pGlobalState->config.spiderOutline2Size  = makeShared<Config::Values::CIntValue>("plugin:hyprbars:outline2_size", "SpiderOS: second border, outside the first one, 0 = off", 0);
+    g_pGlobalState->config.spiderOutline2Color = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.outline2", "SpiderOS: color of the second (outermost) border", 0xff05111d);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutline2Size);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.spiderOutline2Color);
 
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);

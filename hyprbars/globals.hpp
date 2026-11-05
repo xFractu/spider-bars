@@ -63,6 +63,8 @@ struct SGlobalState {
         SP<Config::Values::CFontWeightValue> spiderFooterTextWeight;
         SP<Config::Values::CIntValue>        spiderOutlineSize;
         SP<Config::Values::CColorValue>      spiderOutlineColor;
+        SP<Config::Values::CIntValue>        spiderOutline2Size;
+        SP<Config::Values::CColorValue>      spiderOutline2Color;
     } config;
 };
 

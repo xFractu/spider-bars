@@ -23,6 +23,17 @@ static int outlineSize() {
     return std::max<int>(0, g_pGlobalState->config.spiderOutlineSize->value());
 }
 
+// segundo borde (más afuera); solo se dibuja si también hay primer borde
+static int outline2Size() {
+    if (outlineSize() < 1)
+        return 0;
+    return std::max<int>(0, g_pGlobalState->config.spiderOutline2Size->value());
+}
+
+static int totalSize() {
+    return outlineSize() + outline2Size();
+}
+
 CSpiderOutline::CSpiderOutline(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow), m_pWindow(pWindow) {
     ;
 }
@@ -32,7 +43,7 @@ CSpiderOutline::~CSpiderOutline() {
 }
 
 SDecorationPositioningInfo CSpiderOutline::getPositioningInfo() {
-    const double               S = outlineSize();
+    const double               S = totalSize();
 
     SDecorationPositioningInfo info;
     info.policy         = DECORATION_POSITION_STICKY;
@@ -90,7 +101,7 @@ void CSpiderOutline::damageEntire() {
 }
 
 void CSpiderOutline::draw(Render::CRenderContext& ctx, PHLMONITOR monitor, const float& a, const Render::SWindowRenderPresentation& presentation) {
-    if (!validMapped(m_pWindow) || outlineSize() < 1)
+    if (!validMapped(m_pWindow) || totalSize() < 1)
         return;
 
     const auto PWINDOW = m_pWindow.lock();
@@ -106,9 +117,10 @@ void CSpiderOutline::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor
     if (!PWINDOW)
         return;
 
-    const auto S = outlineSize();
-    if (S != m_iLastSize) {
-        m_iLastSize = S;
+    const auto S  = outlineSize();
+    const auto S2 = outline2Size();
+    if (S + S2 != m_iLastSize) {
+        m_iLastSize = S + S2;
         PWINDOW->layoutTarget()->recalc();
     }
     if (S < 1)
@@ -122,8 +134,14 @@ void CSpiderOutline::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor
 
     box.translate(PWINDOW->presentation().floatingOffset() - pMonitor->m_position + WORKSPACEOFFSET);
 
-    // inner box (the outline is drawn outwards from it)
-    box.expand(-S).scale(pMonitor->m_scale).round();
+    // inner box (the outlines are drawn outwards from it)
+    CBox inner = box;
+    inner.expand(-(S + S2));
+    CBox middle = inner;   // borde exterior: empieza donde termina el primero
+    middle.expand(S);
+    inner.scale(pMonitor->m_scale).round();
+    middle.scale(pMonitor->m_scale).round();
+    box = inner;
 
     if (box.w < 1 || box.h < 1)
         return;
@@ -135,6 +153,12 @@ void CSpiderOutline::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor
 
     g_pHyprOpenGL->renderBorder(ctx, box, Config::CGradientValueData(CHyprColor{sc<uint64_t>(g_pGlobalState->config.spiderOutlineColor->value())}),
                                 CHyprOpenGLImpl::SBorderRenderData{.round = ROUND, .roundingPower = PWINDOW->presentation().roundingPower(), .borderSize = S, .a = a, .outerRound = -1});
+
+    if (S2 > 0) {
+        const int ROUND2 = ROUND > 0 ? ROUND + sc<int>(S * pMonitor->m_scale) : 0;
+        g_pHyprOpenGL->renderBorder(ctx, middle, Config::CGradientValueData(CHyprColor{sc<uint64_t>(g_pGlobalState->config.spiderOutline2Color->value())}),
+                                    CHyprOpenGLImpl::SBorderRenderData{.round = ROUND2, .roundingPower = PWINDOW->presentation().roundingPower(), .borderSize = S2, .a = a, .outerRound = -1});
+    }
 }
 
 std::vector<UP<IPassElement>> CSpiderOutlinePassElement::draw(Render::CRenderContext& ctx) {
